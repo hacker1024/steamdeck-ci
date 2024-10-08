@@ -1,0 +1,45 @@
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 23 * * *'
+
+jobs:
+  detect-devices:
+    runs-on: ubuntu-latest
+    outputs:
+      devices: ${{ steps.devices.outputs.devices }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: devices
+        run: |
+          devices="$(find nixos/devices -mindepth 1 -maxdepth 1 -printf '%f\n' | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')"
+          echo "devices=$devices" >> "$GITHUB_OUTPUT"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: detect-devices
+    strategy:
+      max-parallel: 1 # Do not risk building the same derivation twice.
+      matrix:
+        channel: [unstable, 24.05]
+        device: '${{ fromJSON(needs.detect-devices.outputs.devices) }}'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v30
+      - uses: DeterminateSystems/magic-nix-cache-action@v8
+      - uses: cachix/cachix-action@v15
+        with:
+          name: hacker1024-jovian
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - name: Build systems
+        env:
+          channel: '${{ matrix.channel }}'
+          device: '${{ matrix.device }}'
+        run: |
+          echo "Building device $device for NixOS $channel"
+          nix-build \
+            -I nixpkgs=channel:nixos-"$channel" \
+            -I jovian-nixos=https://github.com/Jovian-Experiments/Jovian-NixOS/archive/development.tar.gz \
+            --show-trace \
+            '<nixpkgs/nixos>' --arg configuration "nixos/devices/$device" -A system
