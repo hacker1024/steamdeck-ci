@@ -21,7 +21,7 @@ jobs:
     strategy:
       max-parallel: 1 # Do not risk building the same derivation twice.
       matrix:
-        channel: [unstable, 24.05]
+        channel: [unstable-small, unstable]
         device: '${{ fromJSON(needs.detect-devices.outputs.devices) }}'
 
     steps:

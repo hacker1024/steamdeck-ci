@@ -23,8 +23,8 @@ not always succeed.
 
 ### Nixpkgs
 
+- `nixos-unstable-small`
 - `nixos-unstable`
-- `nixos-24.05`
 
 ### Jovian-NixOS
 
