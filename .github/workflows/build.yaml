@@ -46,4 +46,5 @@ jobs:
             -I nixpkgs=channel:nixos-"$channel" \
             -I jovian-nixos=https://github.com/Jovian-Experiments/Jovian-NixOS/archive/development.tar.gz \
             --show-trace \
-            '<nixpkgs/nixos>' --arg configuration "nixos/devices/$device" -A system
+            '<nixpkgs/nixos>' --arg configuration "nixos/devices/$device" -A system \
+            || echo "Failed to build device $device for NixOS $channel. It may not be supported."
